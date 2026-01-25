@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Card, Text, useTheme } from 'react-native-paper';
-import { PlayerDropdown } from './PlayerDropdown';
+import { GlassCard } from '@/src/components/ui';
+import { colors } from '@/src/theme';
 import { Player } from '@/src/types/player';
+import React from 'react';
+import { Text } from 'react-native-paper';
+import { PlayerDropdown } from './PlayerDropdown';
 
 interface TeamSelectorProps {
   teamNumber: 1 | 2;
@@ -25,8 +26,7 @@ export function TeamSelector({
   onPlayer2Change,
   disabled = false,
 }: TeamSelectorProps) {
-  const theme = useTheme();
-  const teamColor = teamNumber === 1 ? theme.colors.primary : theme.colors.secondary;
+  const teamColor = teamNumber === 1 ? colors.red.primary : colors.blue.primary;
 
   // Exclude all selected players except the current ones for this team
   const getExcludedIds = (currentPlayerId: number | null) => {
@@ -34,38 +34,30 @@ export function TeamSelector({
   };
 
   return (
-    <Card style={[styles.container, { borderLeftColor: teamColor, borderLeftWidth: 4 }]}>
-      <Card.Content>
-        <Text variant="titleMedium" style={[styles.title, { color: teamColor }]}>
-          Team {teamNumber}
-        </Text>
-        <PlayerDropdown
-          label="Player 1"
-          selectedPlayerId={player1Id}
-          players={players}
-          excludedPlayerIds={getExcludedIds(player1Id)}
-          onSelect={onPlayer1Change}
-          disabled={disabled}
-        />
-        <PlayerDropdown
-          label="Player 2"
-          selectedPlayerId={player2Id}
-          players={players}
-          excludedPlayerIds={getExcludedIds(player2Id)}
-          onSelect={onPlayer2Change}
-          disabled={disabled}
-        />
-      </Card.Content>
-    </Card>
+    <GlassCard
+      style={{ marginVertical: 8 }}
+      variant={teamNumber === 1 ? 'red' : 'blue'}
+    >
+      <Text variant="titleMedium" className="mb-4 font-bold" style={{ color: teamColor }}>
+        Team {teamNumber}
+      </Text>
+      <PlayerDropdown
+        label="Player 1"
+        selectedPlayerId={player1Id}
+        players={players}
+        excludedPlayerIds={getExcludedIds(player1Id)}
+        onSelect={onPlayer1Change}
+        disabled={disabled}
+      />
+      <PlayerDropdown
+        label="Player 2"
+        selectedPlayerId={player2Id}
+        players={players}
+        excludedPlayerIds={getExcludedIds(player2Id)}
+        onSelect={onPlayer2Change}
+        disabled={disabled}
+      />
+    </GlassCard>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 8,
-  },
-  title: {
-    marginBottom: 12,
-    fontWeight: 'bold',
-  },
-});

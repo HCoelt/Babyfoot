@@ -1,31 +1,34 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Surface, Divider } from 'react-native-paper';
 import { AddPlayerForm } from '@/src/components/settings/AddPlayerForm';
 import { PlayerList } from '@/src/components/settings/PlayerList';
+import { colors } from '@/src/theme';
+import React from 'react';
+import { View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function ListHeader() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <>
+    <View style={{ paddingTop: insets.top + 16 }}>
+      <View style={{ paddingHorizontal: 16, marginBottom: 16, alignItems: 'center' }}>
+        <Text style={{ fontWeight: 'bold', letterSpacing: 3, color: colors.textMuted, fontSize: 10, marginBottom: 8 }}>
+          SETTINGS
+        </Text>
+        <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+          Manage players and preferences
+        </Text>
+      </View>
       <AddPlayerForm />
-      <Divider style={styles.divider} />
-    </>
+    </View>
   );
 }
 
 export default function SettingsScreen() {
   return (
-    <Surface style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <PlayerList ListHeaderComponent={ListHeader} />
-    </Surface>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  divider: {
-    height: 1,
-  },
-});

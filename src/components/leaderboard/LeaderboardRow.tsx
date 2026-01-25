@@ -1,106 +1,87 @@
-import React, { memo } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, useTheme, Surface } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { GlassCard } from '@/src/components/ui';
+import { colors } from '@/src/theme';
 import { LeaderboardEntry } from '@/src/types/statistics';
 import { formatRating } from '@/src/utils/scoring';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { memo } from 'react';
+import { View } from 'react-native';
+import { Text } from 'react-native-paper';
 
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
 }
 
 export const LeaderboardRow = memo(function LeaderboardRow({ entry }: LeaderboardRowProps) {
-  const theme = useTheme();
-
   const getRankStyle = () => {
     switch (entry.rank) {
       case 1:
-        return { backgroundColor: '#FFD700', color: '#000' };
+        return { backgroundColor: colors.gold, color: '#000', glow: colors.gold };
       case 2:
-        return { backgroundColor: '#C0C0C0', color: '#000' };
+        return { backgroundColor: colors.silver, color: '#000', glow: colors.silver };
       case 3:
-        return { backgroundColor: '#CD7F32', color: '#FFF' };
+        return { backgroundColor: colors.bronze, color: '#FFF', glow: colors.bronze };
       default:
-        return { backgroundColor: theme.colors.surfaceVariant, color: theme.colors.onSurfaceVariant };
+        return {
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          color: colors.textSecondary,
+          glow: 'transparent',
+        };
     }
   };
 
   const rankStyle = getRankStyle();
+  const isTopThree = entry.rank <= 3;
 
   return (
-    <Surface style={styles.container} elevation={1}>
-      <View style={[styles.rankBadge, { backgroundColor: rankStyle.backgroundColor }]}>
-        {entry.rank <= 3 ? (
-          <MaterialCommunityIcons
-            name="trophy"
-            size={16}
-            color={rankStyle.color}
-          />
-        ) : (
-          <Text style={[styles.rankText, { color: rankStyle.color }]}>
-            {entry.rank}
+    <GlassCard style={{ marginHorizontal: 16, marginVertical: 4 }} noPadding>
+      <View className="flex-row items-center p-4 min-h-[72px]">
+        <View
+          className="w-9 h-9 rounded-[18px] justify-center items-center mr-4"
+          style={[
+            { backgroundColor: rankStyle.backgroundColor },
+            isTopThree && {
+              shadowColor: rankStyle.glow,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 8,
+              elevation: 4,
+            },
+          ]}
+        >
+          {isTopThree ? (
+            <MaterialCommunityIcons
+              name="trophy"
+              size={16}
+              color={rankStyle.color}
+            />
+          ) : (
+            <Text className="font-bold text-sm" style={{ color: rankStyle.color }}>
+              {entry.rank}
+            </Text>
+          )}
+        </View>
+        <View className="flex-1">
+          <Text variant="titleMedium" className="font-semibold text-text">
+            {entry.playerName}
           </Text>
-        )}
+          <Text variant="bodySmall" className="mt-[2px] text-text-secondary">
+            {entry.gamesPlayed} games | {entry.winRate.toFixed(0)}% win rate
+          </Text>
+        </View>
+        <View className="items-end">
+          <Text
+            variant="titleLarge"
+            className="font-bold"
+            style={{ color: isTopThree ? colors.red.primary : colors.text }}
+          >
+            {formatRating(entry.currentRating)}
+          </Text>
+          <Text variant="labelSmall" className="opacity-60 text-text-secondary">
+            Rating
+          </Text>
+        </View>
       </View>
-      <View style={styles.playerInfo}>
-        <Text variant="titleMedium" style={styles.name}>
-          {entry.playerName}
-        </Text>
-        <Text variant="bodySmall" style={styles.stats}>
-          {entry.gamesPlayed} games | {entry.winRate.toFixed(0)}% win rate
-        </Text>
-      </View>
-      <View style={styles.ratingContainer}>
-        <Text variant="titleLarge" style={[styles.rating, { color: theme.colors.primary }]}>
-          {formatRating(entry.currentRating)}
-        </Text>
-        <Text variant="labelSmall" style={styles.ratingLabel}>
-          Rating
-        </Text>
-      </View>
-    </Surface>
+    </GlassCard>
   );
 });
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    minHeight: 72,
-    marginHorizontal: 16,
-    marginVertical: 6,
-    borderRadius: 16,
-  },
-  rankBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  rankText: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  playerInfo: {
-    flex: 1,
-  },
-  name: {
-    fontWeight: '600',
-  },
-  stats: {
-    opacity: 0.7,
-    marginTop: 2,
-  },
-  ratingContainer: {
-    alignItems: 'flex-end',
-  },
-  rating: {
-    fontWeight: 'bold',
-  },
-  ratingLabel: {
-    opacity: 0.5,
-  },
-});

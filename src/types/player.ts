@@ -1,6 +1,9 @@
+export type GameStyle = 'attack' | 'defense';
+
 export interface Player {
   id: number;
   name: string;
+  gamestyle: GameStyle;
   currentRating: number;
   createdAt: Date;
   updatedAt: Date;
@@ -15,6 +18,7 @@ export interface PlayerWithStats extends Player {
 
 export interface CreatePlayerInput {
   name: string;
+  gamestyle: GameStyle;
 }
 
 export interface UpdatePlayerRatingInput {

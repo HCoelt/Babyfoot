@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Menu, Button, Text, useTheme } from 'react-native-paper';
 import { Player } from '@/src/types/player';
+import React, { useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import { Button, Menu, Text, useTheme } from 'react-native-paper';
 
 interface PlayerDropdownProps {
   label: string;
@@ -27,8 +27,8 @@ export function PlayerDropdown({
   const availablePlayers = players.filter((p) => !excludedPlayerIds.includes(p.id));
 
   return (
-    <View style={styles.container}>
-      <Text variant="labelMedium" style={styles.label}>
+    <View className="my-1">
+      <Text variant="labelMedium" className="mb-1 opacity-70">
         {label}
       </Text>
       <Menu
@@ -39,15 +39,15 @@ export function PlayerDropdown({
             mode="outlined"
             onPress={() => setVisible(true)}
             disabled={disabled}
-            style={styles.button}
-            contentStyle={styles.buttonContent}
+            className="w-full"
+            contentStyle={{ justifyContent: 'flex-start' }}
           >
             {selectedPlayer?.name || 'Select Player'}
           </Button>
         }
-        contentStyle={styles.menuContent}
+        contentStyle={{ maxHeight: 300 }}
       >
-        <ScrollView style={styles.menuScroll}>
+        <ScrollView className="max-h-[280px]">
           {availablePlayers.length === 0 ? (
             <Menu.Item title="No players available" disabled />
           ) : (
@@ -73,24 +73,3 @@ export function PlayerDropdown({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 4,
-  },
-  label: {
-    marginBottom: 4,
-    opacity: 0.7,
-  },
-  button: {
-    width: '100%',
-  },
-  buttonContent: {
-    justifyContent: 'flex-start',
-  },
-  menuContent: {
-    maxHeight: 300,
-  },
-  menuScroll: {
-    maxHeight: 280,
-  },
-});

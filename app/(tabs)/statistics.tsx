@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Surface, Text, Menu, Button, Divider, useTheme } from 'react-native-paper';
-import { StatCard } from '@/src/components/statistics/StatCard';
 import { PartnersList } from '@/src/components/statistics/PartnersList';
+import { StatCard } from '@/src/components/statistics/StatCard';
+import { GlassCard } from '@/src/components/ui';
 import { usePlayers } from '@/src/hooks/usePlayers';
 import {
-  usePlayerStats,
   useBestPartners,
-  useToughestOpponents,
+  usePlayerStats,
   useRecentPerformance,
+  useToughestOpponents,
 } from '@/src/hooks/useStatistics';
+import { borderRadius, colors } from '@/src/theme';
 import { formatRating, formatRatingChange } from '@/src/utils/scoring';
+import React, { useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import { Button, Menu, Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function StatisticsScreen() {
-  const theme = useTheme();
   const { data: players = [] } = usePlayers();
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const { data: stats, isLoading: statsLoading } = usePlayerStats(selectedPlayerId);
   const { data: partners = [] } = useBestPartners(selectedPlayerId);
@@ -27,34 +30,48 @@ export default function StatisticsScreen() {
 
   if (players.length === 0) {
     return (
-      <Surface style={styles.container}>
-        <View style={styles.centerContainer}>
-          <Text variant="headlineSmall" style={styles.emptyTitle}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: colors.background }}>
+        <GlassCard style={{ padding: 24, alignItems: 'center' }}>
+          <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center', fontWeight: 'bold', color: colors.text }}>
             No Players Yet
           </Text>
-          <Text style={styles.emptyText}>
+          <Text style={{ textAlign: 'center', lineHeight: 22, color: colors.textSecondary }}>
             Add players in Settings{'\n'}to view statistics.
           </Text>
-        </View>
-      </Surface>
+        </GlassCard>
+      </View>
     );
   }
 
   return (
-    <Surface style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.selectorContainer}>
-          <Text variant="titleMedium" style={styles.selectorLabel}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 80 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ marginBottom: 16, alignItems: 'center' }}>
+          <Text style={{ fontWeight: 'bold', letterSpacing: 3, color: colors.textMuted, fontSize: 10, marginBottom: 8 }}>
+            STATISTICS
+          </Text>
+          <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+            Player performance insights
+          </Text>
+        </View>
+
+        <GlassCard style={{ marginBottom: 16 }}>
+          <Text variant="titleMedium" style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>
             Select Player
           </Text>
           <Menu
             visible={menuVisible}
             onDismiss={() => setMenuVisible(false)}
+            contentStyle={{ borderRadius: borderRadius.md, backgroundColor: colors.surface }}
             anchor={
               <Button
                 mode="outlined"
                 onPress={() => setMenuVisible(true)}
-                style={styles.selectorButton}
+                style={{ borderRadius: borderRadius.md, borderColor: colors.cardBorder }}
+                textColor={selectedPlayer ? colors.text : colors.textSecondary}
               >
                 {selectedPlayer?.name || 'Choose a player'}
               </Button>
@@ -70,17 +87,17 @@ export default function StatisticsScreen() {
                 title={player.name}
                 titleStyle={
                   player.id === selectedPlayerId
-                    ? { color: theme.colors.primary, fontWeight: 'bold' }
-                    : undefined
+                    ? { color: colors.red.primary, fontWeight: 'bold' }
+                    : { color: colors.text }
                 }
               />
             ))}
           </Menu>
-        </View>
+        </GlassCard>
 
         {!selectedPlayerId && (
-          <View style={styles.noSelectionContainer}>
-            <Text style={styles.noSelectionText}>
+          <View style={{ padding: 32, alignItems: 'center' }}>
+            <Text style={{ textAlign: 'center', color: colors.textSecondary }}>
               Select a player above to view their statistics
             </Text>
           </View>
@@ -88,34 +105,32 @@ export default function StatisticsScreen() {
 
         {selectedPlayerId && stats && (
           <>
-            <View style={styles.statsGrid}>
+            <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 8 }}>
               <StatCard
                 title="Rating"
                 value={formatRating(stats.currentRating)}
-                color={theme.colors.primary}
+                color={colors.red.primary}
               />
               <StatCard
                 title="Win Rate"
                 value={`${stats.winRate.toFixed(0)}%`}
-                color={stats.winRate >= 50 ? theme.colors.primary : theme.colors.error}
+                color={stats.winRate >= 50 ? colors.success : colors.error}
               />
             </View>
 
-            <View style={styles.statsGrid}>
-              <StatCard title="Games" value={stats.gamesPlayed} />
+            <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 8 }}>
+              <StatCard title="Games" value={stats.gamesPlayed} color={colors.text} />
               <StatCard
                 title="Wins"
                 value={stats.wins}
-                color={theme.colors.primary}
+                color={colors.success}
               />
               <StatCard
                 title="Losses"
                 value={stats.losses}
-                color={theme.colors.error}
+                color={colors.error}
               />
             </View>
-
-            <Divider style={styles.divider} />
 
             <PartnersList
               title="Best Partners"
@@ -123,8 +138,6 @@ export default function StatisticsScreen() {
               type="partner"
               emptyMessage="Play more games to see partner stats"
             />
-
-            <Divider style={styles.divider} />
 
             <PartnersList
               title="Toughest Opponents"
@@ -134,116 +147,50 @@ export default function StatisticsScreen() {
             />
 
             {recentGames.length > 0 && (
-              <>
-                <Divider style={styles.divider} />
-                <View style={styles.recentContainer}>
-                  <Text variant="titleMedium" style={styles.recentTitle}>
-                    Recent Performance
-                  </Text>
-                  <View style={styles.recentGames}>
-                    {recentGames.slice(0, 10).map((game, index) => (
-                      <View
-                        key={game.gameId}
-                        style={[
-                          styles.recentGame,
-                          {
-                            backgroundColor: game.won
-                              ? `${theme.colors.primary}20`
-                              : `${theme.colors.error}20`,
-                          },
-                        ]}
+              <GlassCard style={{ marginTop: 8 }}>
+                <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600', color: colors.text }}>
+                  Recent Performance
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {recentGames.slice(0, 10).map((game, index) => (
+                    <View
+                      key={game.gameId}
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: borderRadius.sm,
+                        borderWidth: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: game.won
+                          ? colors.red.transparent
+                          : colors.blue.transparent,
+                        borderColor: game.won
+                          ? colors.red.glow
+                          : colors.blue.glow,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                          color: game.won ? colors.red.primary : colors.blue.primary,
+                        }}
                       >
-                        <Text
-                          style={{
-                            color: game.won ? theme.colors.primary : theme.colors.error,
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          {game.won ? 'W' : 'L'}
-                        </Text>
-                        <Text variant="labelSmall" style={styles.ratingChange}>
-                          {formatRatingChange(game.ratingChange)}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
+                        {game.won ? 'W' : 'L'}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: colors.textSecondary }}>
+                        {formatRatingChange(game.ratingChange)}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
-              </>
+              </GlassCard>
             )}
           </>
         )}
       </ScrollView>
-    </Surface>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  emptyText: {
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  selectorContainer: {
-    marginBottom: 16,
-  },
-  selectorLabel: {
-    marginBottom: 8,
-  },
-  selectorButton: {
-    width: '100%',
-  },
-  noSelectionContainer: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  noSelectionText: {
-    opacity: 0.6,
-    textAlign: 'center',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    marginHorizontal: -4,
-    marginBottom: 8,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  recentContainer: {
-    marginTop: 8,
-  },
-  recentTitle: {
-    marginBottom: 12,
-    fontWeight: '600',
-  },
-  recentGames: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  recentGame: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ratingChange: {
-    opacity: 0.7,
-  },
-});

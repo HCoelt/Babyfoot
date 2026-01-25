@@ -1,12 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  getAllPlayers,
-  getPlayersWithStats,
   createPlayer,
   deletePlayer,
+  getAllPlayers,
+  getPlayersWithStats,
+  updatePlayerGamestyle,
   updatePlayerRating,
 } from '../database/operations/players';
-import { CreatePlayerInput } from '../types/player';
+import { CreatePlayerInput, GameStyle } from '../types/player';
 
 export function usePlayers() {
   return useQuery({
@@ -53,6 +54,18 @@ export function useUpdatePlayerRating() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+    },
+  });
+}
+
+export function useUpdatePlayerGamestyle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, gamestyle }: { id: number; gamestyle: GameStyle }) =>
+      updatePlayerGamestyle(id, gamestyle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players'] });
     },
   });
 }

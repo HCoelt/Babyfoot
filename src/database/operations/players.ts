@@ -1,11 +1,12 @@
-import { getDatabase } from '../db';
 import { PlayerRow } from '../../types/database';
-import { Player, PlayerWithStats, CreatePlayerInput } from '../../types/player';
+import { CreatePlayerInput, Player, PlayerWithStats } from '../../types/player';
+import { getDatabase } from '../db';
 
 function rowToPlayer(row: PlayerRow): Player {
   return {
     id: row.id,
     name: row.name,
+    gamestyle: row.gamestyle || 'attack', // Fallback for existing players without gamestyle
     currentRating: row.current_rating,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -34,8 +35,8 @@ export async function createPlayer(input: CreatePlayerInput): Promise<Player> {
   const now = Date.now();
 
   const result = await db.runAsync(
-    'INSERT INTO players (name, current_rating, created_at, updated_at) VALUES (?, 1000.0, ?, ?)',
-    [input.name.trim(), now, now]
+    'INSERT INTO players (name, gamestyle, current_rating, created_at, updated_at) VALUES (?, ?, 1000.0, ?, ?)',
+    [input.name.trim(), input.gamestyle, now, now]
   );
 
   const player = await getPlayerById(result.lastInsertRowId);
@@ -79,6 +80,22 @@ export async function updatePlayerRating(id: number, newRating: number): Promise
   return player;
 }
 
+export async function updatePlayerGamestyle(id: number, gamestyle: 'attack' | 'defense'): Promise<Player> {
+  const db = await getDatabase();
+  const now = Date.now();
+
+  await db.runAsync(
+    'UPDATE players SET gamestyle = ?, updated_at = ? WHERE id = ?',
+    [gamestyle, now, id]
+  );
+
+  const player = await getPlayerById(id);
+  if (!player) {
+    throw new Error('Player not found');
+  }
+  return player;
+}
+
 export async function getPlayersWithStats(): Promise<PlayerWithStats[]> {
   const db = await getDatabase();
 
@@ -86,6 +103,7 @@ export async function getPlayersWithStats(): Promise<PlayerWithStats[]> {
     SELECT
       p.id,
       p.name,
+      p.gamestyle,
       p.current_rating,
       p.created_at,
       p.updated_at,
@@ -116,6 +134,7 @@ export async function getPlayersWithStats(): Promise<PlayerWithStats[]> {
   return rows.map(row => ({
     id: row.id,
     name: row.name,
+    gamestyle: row.gamestyle || 'attack', // Fallback for existing players without gamestyle
     currentRating: row.current_rating,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),

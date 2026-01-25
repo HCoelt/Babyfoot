@@ -1,11 +1,12 @@
 import * as SQLite from 'expo-sqlite';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 const CREATE_PLAYERS_TABLE = `
 CREATE TABLE IF NOT EXISTS players (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
+  gamestyle TEXT NOT NULL DEFAULT 'attack' CHECK(gamestyle IN ('attack', 'defense')),
   current_rating REAL DEFAULT 1000.0,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -52,7 +53,38 @@ CREATE INDEX IF NOT EXISTS idx_games_team2_players ON games(team2_player1_id, te
 CREATE INDEX IF NOT EXISTS idx_rating_history_player ON rating_history(player_id, created_at DESC);
 `;
 
+async function getSchemaVersion(db: SQLite.SQLiteDatabase): Promise<number> {
+  try {
+    const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+    return result?.user_version ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function setSchemaVersion(db: SQLite.SQLiteDatabase, version: number): Promise<void> {
+  await db.execAsync(`PRAGMA user_version = ${version}`);
+}
+
+async function migrateToV2(db: SQLite.SQLiteDatabase): Promise<void> {
+  // Check if gamestyle column exists
+  const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(players)');
+  const hasGamestyleColumn = tableInfo.some(col => col.name === 'gamestyle');
+
+  if (!hasGamestyleColumn) {
+    // Add gamestyle column with default value 'attack'
+    // Note: SQLite ALTER TABLE doesn't support CHECK constraints, so we add without it
+    // The constraint is enforced at the application level
+    await db.execAsync("ALTER TABLE players ADD COLUMN gamestyle TEXT DEFAULT 'attack'");
+    // Update any NULL values to 'attack'
+    await db.execAsync("UPDATE players SET gamestyle = 'attack' WHERE gamestyle IS NULL");
+  }
+}
+
 export async function initializeSchema(db: SQLite.SQLiteDatabase): Promise<void> {
+  const currentVersion = await getSchemaVersion(db);
+
+  // Create tables if they don't exist
   await db.execAsync(CREATE_PLAYERS_TABLE);
   await db.execAsync(CREATE_GAMES_TABLE);
   await db.execAsync(CREATE_RATING_HISTORY_TABLE);
@@ -62,4 +94,12 @@ export async function initializeSchema(db: SQLite.SQLiteDatabase): Promise<void>
   for (const statement of indexStatements) {
     await db.execAsync(statement);
   }
+
+  // Run migrations
+  if (currentVersion < 2) {
+    await migrateToV2(db);
+  }
+
+  // Update schema version
+  await setSchemaVersion(db, SCHEMA_VERSION);
 }

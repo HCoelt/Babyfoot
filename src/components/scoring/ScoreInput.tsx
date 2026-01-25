@@ -1,6 +1,8 @@
+import { GlassCard } from '@/src/components/ui';
+import { colors } from '@/src/theme';
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, Text, useTheme } from 'react-native-paper';
+import { View } from 'react-native';
+import { Text, TextInput } from 'react-native-paper';
 
 interface ScoreInputProps {
   team1Score: string;
@@ -17,8 +19,6 @@ export function ScoreInput({
   onTeam2ScoreChange,
   disabled = false,
 }: ScoreInputProps) {
-  const theme = useTheme();
-
   const handleScoreChange = (value: string, onChange: (s: string) => void) => {
     // Only allow positive integers
     const numericValue = value.replace(/[^0-9]/g, '');
@@ -26,12 +26,12 @@ export function ScoreInput({
   };
 
   return (
-    <View style={styles.container}>
-      <Text variant="titleMedium" style={styles.title}>
+    <GlassCard style={{ marginVertical: 8 }}>
+      <Text variant="titleMedium" className="text-center mb-4 font-semibold text-text">
         Final Score
       </Text>
-      <View style={styles.scoreRow}>
-        <View style={styles.scoreInput}>
+      <View className="flex-row items-center justify-center">
+        <View className="w-[110px]">
           <TextInput
             label="Team 1"
             value={team1Score}
@@ -39,14 +39,22 @@ export function ScoreInput({
             keyboardType="number-pad"
             mode="outlined"
             disabled={disabled}
-            style={[styles.input, { borderColor: theme.colors.primary }]}
-            contentStyle={styles.inputContent}
+            className="text-center bg-transparent"
+            contentStyle={{ textAlign: 'center' }}
+            outlineColor={colors.red.transparent}
+            activeOutlineColor={colors.red.primary}
+            textColor={colors.text}
+            theme={{
+              colors: {
+                onSurfaceVariant: colors.textSecondary,
+              },
+            }}
           />
         </View>
-        <Text variant="headlineSmall" style={styles.vs}>
+        <Text variant="headlineMedium" className="mx-4 font-light text-text-secondary">
           -
         </Text>
-        <View style={styles.scoreInput}>
+        <View className="w-[110px]">
           <TextInput
             label="Team 2"
             value={team2Score}
@@ -54,39 +62,20 @@ export function ScoreInput({
             keyboardType="number-pad"
             mode="outlined"
             disabled={disabled}
-            style={[styles.input, { borderColor: theme.colors.secondary }]}
-            contentStyle={styles.inputContent}
+            className="text-center bg-transparent"
+            contentStyle={{ textAlign: 'center' }}
+            outlineColor={colors.blue.transparent}
+            activeOutlineColor={colors.blue.primary}
+            textColor={colors.text}
+            theme={{
+              colors: {
+                onSurfaceVariant: colors.textSecondary,
+              },
+            }}
           />
         </View>
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 16,
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreInput: {
-    width: 100,
-  },
-  input: {
-    textAlign: 'center',
-  },
-  inputContent: {
-    textAlign: 'center',
-  },
-  vs: {
-    marginHorizontal: 16,
-    opacity: 0.6,
-  },
-});

@@ -1,7 +1,9 @@
+import { GlassCard } from '@/src/components/ui';
+import { colors } from '@/src/theme';
+import { OpponentStats, PartnerStats } from '@/src/types/statistics';
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { List, Text, Divider, useTheme } from 'react-native-paper';
-import { PartnerStats, OpponentStats } from '@/src/types/statistics';
+import { FlatList, View } from 'react-native';
+import { Text } from 'react-native-paper';
 
 interface PartnersListProps {
   title: string;
@@ -11,8 +13,6 @@ interface PartnersListProps {
 }
 
 export function PartnersList({ title, data, type, emptyMessage }: PartnersListProps) {
-  const theme = useTheme();
-
   const getName = (item: PartnerStats | OpponentStats): string => {
     if ('partnerName' in item) return item.partnerName;
     return item.opponentName;
@@ -34,90 +34,57 @@ export function PartnersList({ title, data, type, emptyMessage }: PartnersListPr
 
   if (!data || data.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text variant="titleMedium" style={styles.title}>
+      <GlassCard style={{ marginVertical: 8 }}>
+        <Text variant="titleMedium" className="mb-4 font-semibold text-text">
           {title}
         </Text>
-        <Text style={styles.emptyText}>{emptyMessage}</Text>
-      </View>
+        <Text className="text-sm text-text-secondary">{emptyMessage}</Text>
+      </GlassCard>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text variant="titleMedium" style={styles.title}>
+    <GlassCard style={{ marginVertical: 8 }}>
+      <Text variant="titleMedium" className="mb-4 font-semibold text-text">
         {title}
       </Text>
       <FlatList<PartnerStats | OpponentStats>
         data={data as (PartnerStats | OpponentStats)[]}
         keyExtractor={(item) => getId(item).toString()}
-        renderItem={({ item, index }) => (
-          <List.Item
-            title={getName(item)}
-            description={`${getGames(item)} games together`}
-            left={(props) => (
-              <View style={styles.rankContainer}>
-                <Text style={styles.rank}>{index + 1}</Text>
+        renderItem={({ item, index }) => {
+          const winRate = getWinRate(item);
+          const winRateColor = winRate >= 50 ? colors.success : colors.error;
+
+          return (
+            <View
+              className="flex-row items-center py-2"
+              style={index < data.length - 1 ? { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' } : {}}
+            >
+              <View className="w-7 justify-center items-center">
+                <Text className="font-bold text-sm text-text-secondary">{index + 1}</Text>
               </View>
-            )}
-            right={() => (
-              <View style={styles.winRateContainer}>
-                <Text
-                  variant="titleMedium"
-                  style={{
-                    color:
-                      type === 'partner'
-                        ? getWinRate(item) >= 50
-                          ? theme.colors.primary
-                          : theme.colors.error
-                        : getWinRate(item) >= 50
-                        ? theme.colors.primary
-                        : theme.colors.error,
-                  }}
-                >
-                  {getWinRate(item).toFixed(0)}%
+              <View className="flex-1 ml-2">
+                <Text variant="bodyLarge" className="font-medium text-text">
+                  {getName(item)}
                 </Text>
-                <Text variant="labelSmall" style={styles.winRateLabel}>
+                <Text variant="bodySmall" className="text-text-secondary">
+                  {getGames(item)} games together
+                </Text>
+              </View>
+              <View className="items-end justify-center">
+                <Text variant="titleMedium" className="font-bold" style={{ color: winRateColor }}>
+                  {winRate.toFixed(0)}%
+                </Text>
+                <Text variant="labelSmall" className="text-[10px] text-text-secondary">
                   {type === 'partner' ? 'win rate' : 'vs them'}
                 </Text>
               </View>
-            )}
-          />
-        )}
-        ItemSeparatorComponent={() => <Divider />}
+            </View>
+          );
+        }}
         scrollEnabled={false}
       />
-    </View>
+    </GlassCard>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 8,
-  },
-  title: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  emptyText: {
-    marginHorizontal: 16,
-    opacity: 0.6,
-  },
-  rankContainer: {
-    width: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rank: {
-    fontWeight: 'bold',
-    opacity: 0.5,
-  },
-  winRateContainer: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  winRateLabel: {
-    opacity: 0.5,
-  },
-});

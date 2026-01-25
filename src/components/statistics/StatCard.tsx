@@ -1,6 +1,7 @@
+import { GlassCard } from '@/src/components/ui';
+import { colors } from '@/src/theme';
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Card, Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 
 interface StatCardProps {
   title: string;
@@ -10,47 +11,22 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, subtitle, color }: StatCardProps) {
-  const theme = useTheme();
-  const textColor = color || theme.colors.primary;
+  const valueColor = color || colors.red.primary;
 
   return (
-    <Card style={styles.card}>
-      <Card.Content style={styles.content}>
-        <Text variant="labelMedium" style={styles.title}>
-          {title}
+    <GlassCard style={{ flex: 1, margin: 4, minWidth: 100, alignItems: 'center', paddingVertical: 16 }}>
+      <Text variant="labelMedium" className="mb-1 text-[11px] tracking-[0.5px] text-text-secondary uppercase">
+        {title}
+      </Text>
+      <Text variant="headlineMedium" className="font-bold" style={{ color: valueColor }}>
+        {value}
+      </Text>
+      {subtitle && (
+        <Text variant="bodySmall" className="mt-[2px] text-text-secondary">
+          {subtitle}
         </Text>
-        <Text variant="headlineMedium" style={[styles.value, { color: textColor }]}>
-          {value}
-        </Text>
-        {subtitle && (
-          <Text variant="bodySmall" style={styles.subtitle}>
-            {subtitle}
-          </Text>
-        )}
-      </Card.Content>
-    </Card>
+      )}
+    </GlassCard>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    margin: 4,
-    minWidth: 100,
-  },
-  content: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  title: {
-    opacity: 0.7,
-    marginBottom: 4,
-  },
-  value: {
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    opacity: 0.6,
-    marginTop: 2,
-  },
-});

@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, HelperText } from 'react-native-paper';
+import { GlassCard } from '@/src/components/ui';
 import { useCreatePlayer } from '@/src/hooks/usePlayers';
+import { colors } from '@/src/theme';
+import { GameStyle } from '@/src/types/player';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import { Button, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 
 export function AddPlayerForm() {
   const [name, setName] = useState('');
+  const [gamestyle, setGamestyle] = useState<GameStyle>('attack');
   const [error, setError] = useState('');
   const createPlayer = useCreatePlayer();
 
@@ -22,8 +26,9 @@ export function AddPlayerForm() {
     }
 
     try {
-      await createPlayer.mutateAsync({ name: trimmedName });
+      await createPlayer.mutateAsync({ name: trimmedName, gamestyle });
       setName('');
+      setGamestyle('attack');
       setError('');
     } catch (err) {
       if (err instanceof Error && err.message.includes('UNIQUE')) {
@@ -35,7 +40,7 @@ export function AddPlayerForm() {
   };
 
   return (
-    <View style={styles.container}>
+    <GlassCard style={{ marginHorizontal: 16, marginBottom: 16 }}>
       <TextInput
         label="Player Name"
         value={name}
@@ -44,34 +49,64 @@ export function AddPlayerForm() {
           setError('');
         }}
         mode="outlined"
-        style={styles.input}
+        className="mb-1 bg-transparent"
         error={!!error}
         disabled={createPlayer.isPending}
+        outlineColor={colors.cardBorder}
+        activeOutlineColor={colors.red.primary}
+        textColor={colors.text}
+        theme={{
+          colors: {
+            onSurfaceVariant: colors.textSecondary,
+          },
+        }}
       />
       <HelperText type="error" visible={!!error}>
         {error}
       </HelperText>
+
+      <View className="mb-4">
+        <Text variant="bodyMedium" className="mb-2 text-text-secondary">
+          Preferred Position
+        </Text>
+        <SegmentedButtons
+          value={gamestyle}
+          onValueChange={(value) => setGamestyle(value as GameStyle)}
+          buttons={[
+            {
+              value: 'attack',
+              label: 'Attack',
+              icon: 'sword',
+              checkedColor: colors.red.primary,
+            },
+            {
+              value: 'defense',
+              label: 'Defense',
+              icon: 'shield',
+              checkedColor: colors.blue.primary,
+            },
+          ]}
+          style={{ backgroundColor: 'transparent' }}
+          theme={{
+            colors: {
+              secondaryContainer: colors.red.transparent,
+              onSecondaryContainer: colors.text,
+              outline: colors.cardBorder,
+            },
+          }}
+        />
+      </View>
+
       <Button
         mode="contained"
         onPress={handleSubmit}
         loading={createPlayer.isPending}
         disabled={createPlayer.isPending || !name.trim()}
-        style={styles.button}
+        className="mt-2 rounded-md"
+        buttonColor={colors.red.primary}
       >
         Add Player
       </Button>
-    </View>
+    </GlassCard>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-  input: {
-    marginBottom: 4,
-  },
-  button: {
-    marginTop: 8,
-  },
-});

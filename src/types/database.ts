@@ -3,6 +3,7 @@
 export interface PlayerRow {
   id: number;
   name: string;
+  gamestyle: 'attack' | 'defense';
   current_rating: number;
   created_at: number;
   updated_at: number;
