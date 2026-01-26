@@ -1,6 +1,5 @@
 import { colors } from '@/src/theme';
 import { Player } from '@/src/types/player';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Dimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
@@ -70,11 +69,6 @@ export function TeamCard({
                         {teamLabel}
                     </Text>
                 </View>
-                <MaterialCommunityIcons
-                    name="sword-cross"
-                    size={16}
-                    color={accentColor}
-                />
             </View>
 
             {/* Score Display - Reduced Size */}

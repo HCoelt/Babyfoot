@@ -1,16 +1,20 @@
 import { PartnersList } from '@/src/components/statistics/PartnersList';
-import { StatCard } from '@/src/components/statistics/StatCard';
+import { PositionStats } from '@/src/components/statistics/PositionStats';
+import { RatingChart } from '@/src/components/statistics/RatingChart';
+import { StatItem } from '@/src/components/statistics/StatCard';
 import { GlassCard } from '@/src/components/ui';
 import { usePlayers } from '@/src/hooks/usePlayers';
 import {
   useBestPartners,
   usePlayerStats,
+  useRatingHistory,
   useRecentPerformance,
   useToughestOpponents,
 } from '@/src/hooks/useStatistics';
 import { borderRadius, colors } from '@/src/theme';
 import { formatRating, formatRatingChange } from '@/src/utils/scoring';
-import React, { useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Button, Menu, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,10 +25,25 @@ export default function StatisticsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
+  useFocusEffect(
+    useCallback(() => {
+      // When screen gains focus, we can optionally reset or keep state.
+      // User asked: "changing of page it have to reset".
+      // This implies when I come BACK to the page, it should be reset? Or when I LEAVE?
+      // "changing of page it have to reset to select a player" -> implies entering the page should show "Select a player"
+      return () => {
+        // Cleanup when screen loses focus
+        setSelectedPlayerId(null);
+        setMenuVisible(false);
+      };
+    }, [])
+  );
+
   const { data: stats, isLoading: statsLoading } = usePlayerStats(selectedPlayerId);
   const { data: partners = [] } = useBestPartners(selectedPlayerId);
   const { data: opponents = [] } = useToughestOpponents(selectedPlayerId);
   const { data: recentGames = [] } = useRecentPerformance(selectedPlayerId, 10);
+  const { data: ratingHistory = [] } = useRatingHistory(selectedPlayerId);
 
   const selectedPlayer = players.find((p) => p.id === selectedPlayerId);
 
@@ -77,21 +96,26 @@ export default function StatisticsScreen() {
               </Button>
             }
           >
-            {players.map((player) => (
-              <Menu.Item
-                key={player.id}
-                onPress={() => {
-                  setSelectedPlayerId(player.id);
-                  setMenuVisible(false);
-                }}
-                title={player.name}
-                titleStyle={
-                  player.id === selectedPlayerId
-                    ? { color: colors.red.primary, fontWeight: 'bold' }
-                    : { color: colors.text }
-                }
-              />
-            ))}
+            <ScrollView style={{ maxHeight: 300 }}>
+              {players.map((player) => (
+                <Menu.Item
+                  key={player.id}
+                  onPress={() => {
+                    setMenuVisible(false);
+                    // Defer state update to ensure menu closes smoothly before heavy re-render
+                    setTimeout(() => {
+                      setSelectedPlayerId(player.id);
+                    }, 0);
+                  }}
+                  title={player.name}
+                  titleStyle={
+                    player.id === selectedPlayerId
+                      ? { color: colors.red.primary, fontWeight: 'bold' }
+                      : { color: colors.text }
+                  }
+                />
+              ))}
+            </ScrollView>
           </Menu>
         </GlassCard>
 
@@ -105,32 +129,43 @@ export default function StatisticsScreen() {
 
         {selectedPlayerId && stats && (
           <>
-            <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 8 }}>
-              <StatCard
-                title="Rating"
-                value={formatRating(stats.currentRating)}
-                color={colors.red.primary}
-              />
-              <StatCard
-                title="Win Rate"
-                value={`${stats.winRate.toFixed(0)}%`}
-                color={stats.winRate >= 50 ? colors.success : colors.error}
-              />
-            </View>
+            <GlassCard transparent style={{ marginBottom: 8, padding: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                <StatItem
+                  title="Rating"
+                  value={formatRating(stats.currentRating)}
+                  color={colors.red.primary}
+                />
+                <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', height: '100%' }} />
+                <StatItem
+                  title="Win Rate"
+                  value={`${stats.winRate.toFixed(0)}% `}
+                  color={stats.winRate >= 50 ? colors.success : colors.error}
+                />
+              </View>
+            </GlassCard>
 
-            <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 8 }}>
-              <StatCard title="Games" value={stats.gamesPlayed} color={colors.text} />
-              <StatCard
-                title="Wins"
-                value={stats.wins}
-                color={colors.success}
-              />
-              <StatCard
-                title="Losses"
-                value={stats.losses}
-                color={colors.error}
-              />
-            </View>
+            <GlassCard transparent style={{ marginBottom: 8, padding: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                <StatItem title="Games" value={stats.gamesPlayed} color={colors.text} />
+                <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', height: '100%' }} />
+                <StatItem
+                  title="Wins"
+                  value={stats.wins}
+                  color={colors.success}
+                />
+                <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.1)', height: '100%' }} />
+                <StatItem
+                  title="Losses"
+                  value={stats.losses}
+                  color={colors.error}
+                />
+              </View>
+            </GlassCard>
+
+            {ratingHistory.length > 0 && <RatingChart history={ratingHistory} />}
+
+            <PositionStats attack={stats.attack} defense={stats.defense} />
 
             <PartnersList
               title="Best Partners"
@@ -147,7 +182,7 @@ export default function StatisticsScreen() {
             />
 
             {recentGames.length > 0 && (
-              <GlassCard style={{ marginTop: 8 }}>
+              <GlassCard transparent style={{ marginTop: 8 }}>
                 <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600', color: colors.text }}>
                   Recent Performance
                 </Text>

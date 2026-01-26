@@ -1,11 +1,11 @@
-import { getDatabase } from '../db';
 import {
-  PlayerStats,
-  PartnerStats,
-  OpponentStats,
-  RecentPerformance,
   LeaderboardEntry,
+  OpponentStats,
+  PartnerStats,
+  PlayerStats,
+  RecentPerformance,
 } from '../../types/statistics';
+import { getDatabase } from '../db';
 
 export async function getPlayerStats(playerId: number): Promise<PlayerStats | null> {
   const db = await getDatabase();
@@ -17,7 +17,11 @@ export async function getPlayerStats(playerId: number): Promise<PlayerStats | nu
       p.current_rating,
       COALESCE(stats.games_played, 0) as games_played,
       COALESCE(stats.wins, 0) as wins,
-      COALESCE(avg_change.avg_rating_change, 0) as avg_rating_change
+      COALESCE(avg_change.avg_rating_change, 0) as avg_rating_change,
+      COALESCE(pos_stats.attack_games, 0) as attack_games,
+      COALESCE(pos_stats.attack_wins, 0) as attack_wins,
+      COALESCE(pos_stats.defense_games, 0) as defense_games,
+      COALESCE(pos_stats.defense_wins, 0) as defense_wins
     FROM players p
     LEFT JOIN (
       SELECT
@@ -42,6 +46,25 @@ export async function getPlayerStats(playerId: number): Promise<PlayerStats | nu
       WHERE player_id = ?
       GROUP BY player_id
     ) avg_change ON p.id = avg_change.player_id
+    LEFT JOIN (
+      SELECT
+        player_id,
+        SUM(CASE WHEN position = 'attack' THEN 1 ELSE 0 END) as attack_games,
+        SUM(CASE WHEN position = 'attack' AND won = 1 THEN 1 ELSE 0 END) as attack_wins,
+        SUM(CASE WHEN position = 'defense' THEN 1 ELSE 0 END) as defense_games,
+        SUM(CASE WHEN position = 'defense' AND won = 1 THEN 1 ELSE 0 END) as defense_wins
+      FROM (
+        SELECT team1_player1_id as player_id, team1_player1_position as position, CASE WHEN winner_team = 1 THEN 1 ELSE 0 END as won FROM games
+        UNION ALL
+        SELECT team1_player2_id as player_id, team1_player2_position as position, CASE WHEN winner_team = 1 THEN 1 ELSE 0 END as won FROM games
+        UNION ALL
+        SELECT team2_player1_id as player_id, team2_player1_position as position, CASE WHEN winner_team = 2 THEN 1 ELSE 0 END as won FROM games
+        UNION ALL
+        SELECT team2_player2_id as player_id, team2_player2_position as position, CASE WHEN winner_team = 2 THEN 1 ELSE 0 END as won FROM games
+      ) pos_games
+      WHERE player_id = ?
+      GROUP BY player_id
+    ) pos_stats ON p.id = pos_stats.player_id
     WHERE p.id = ?
   `;
 
@@ -52,7 +75,11 @@ export async function getPlayerStats(playerId: number): Promise<PlayerStats | nu
     games_played: number;
     wins: number;
     avg_rating_change: number;
-  }>(query, [playerId, playerId, playerId]);
+    attack_games: number;
+    attack_wins: number;
+    defense_games: number;
+    defense_wins: number;
+  }>(query, [playerId, playerId, playerId, playerId]);
 
   if (!row) return null;
 
@@ -66,6 +93,16 @@ export async function getPlayerStats(playerId: number): Promise<PlayerStats | nu
     losses,
     winRate: row.games_played > 0 ? (row.wins / row.games_played) * 100 : 0,
     avgRatingChange: row.avg_rating_change,
+    attack: {
+      gamesPlayed: row.attack_games,
+      wins: row.attack_wins,
+      winRate: row.attack_games > 0 ? (row.attack_wins / row.attack_games) * 100 : 0,
+    },
+    defense: {
+      gamesPlayed: row.defense_games,
+      wins: row.defense_wins,
+      winRate: row.defense_games > 0 ? (row.defense_wins / row.defense_games) * 100 : 0,
+    },
   };
 }
 
@@ -251,5 +288,29 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
     wins: row.wins,
     losses: row.games_played - row.wins,
     winRate: row.games_played > 0 ? (row.wins / row.games_played) * 100 : 0,
+  }));
+}
+
+export async function getRatingHistory(playerId: number): Promise<{ date: Date; rating: number }[]> {
+  const db = await getDatabase();
+
+  const rows = await db.getAllAsync<{
+    created_at: number;
+    rating_after: number;
+  }>(
+    `SELECT created_at, rating_after 
+     FROM rating_history 
+     WHERE player_id = ? 
+     ORDER BY created_at ASC`,
+    [playerId]
+  );
+
+  if (rows.length === 0) {
+    return [{ date: new Date(), rating: 1000 }];
+  }
+
+  return rows.map(row => ({
+    date: new Date(row.created_at),
+    rating: row.rating_after
   }));
 }

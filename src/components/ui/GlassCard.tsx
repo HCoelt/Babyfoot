@@ -16,9 +16,10 @@ export function GlassCard({
   variant = 'default',
   intensity = 'medium',
   noPadding = false,
-}: GlassCardProps) {
+  transparent = false,
+}: GlassCardProps & { transparent?: boolean }) {
   // Determine variant classes
-  let variantClasses = "bg-card border-card-border";
+  let variantClasses = transparent ? "bg-transparent border-card-border" : "bg-card border-card-border";
   if (variant === 'red') {
     variantClasses = "bg-red-transparent border-red-glow";
   } else if (variant === 'blue') {
@@ -26,6 +27,7 @@ export function GlassCard({
   }
 
   const getBlurIntensity = () => {
+    if (transparent) return 0;
     const base = 20;
     switch (intensity) {
       case 'low': return base * 0.5;

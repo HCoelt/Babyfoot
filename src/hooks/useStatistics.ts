@@ -1,16 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  getPlayerStats,
   getBestPartners,
-  getToughestOpponents,
-  getRecentPerformance,
   getLeaderboard,
+  getPlayerStats,
+  getRatingHistory,
+  getRecentPerformance,
+  getToughestOpponents,
 } from '../database/operations/statistics';
 
 export function usePlayerStats(playerId: number | null) {
   return useQuery({
     queryKey: ['statistics', 'player', playerId],
     queryFn: () => (playerId ? getPlayerStats(playerId) : null),
+    enabled: playerId !== null,
+  });
+}
+
+export function useRatingHistory(playerId: number | null) {
+  return useQuery({
+    queryKey: ['statistics', 'history', playerId],
+    queryFn: () => (playerId ? getRatingHistory(playerId) : []),
     enabled: playerId !== null,
   });
 }

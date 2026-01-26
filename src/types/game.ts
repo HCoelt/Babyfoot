@@ -4,6 +4,10 @@ export interface Game {
   team1Player2Id: number;
   team2Player1Id: number;
   team2Player2Id: number;
+  team1Player1Position: 'attack' | 'defense';
+  team1Player2Position: 'attack' | 'defense';
+  team2Player1Position: 'attack' | 'defense';
+  team2Player2Position: 'attack' | 'defense';
   team1Score: number;
   team2Score: number;
   winnerTeam: 1 | 2;
@@ -23,6 +27,10 @@ export interface CreateGameInput {
   team1Player2Id: number;
   team2Player1Id: number;
   team2Player2Id: number;
+  team1Player1Position: 'attack' | 'defense';
+  team1Player2Position: 'attack' | 'defense';
+  team2Player1Position: 'attack' | 'defense';
+  team2Player2Position: 'attack' | 'defense';
   team1Score: number;
   team2Score: number;
 }

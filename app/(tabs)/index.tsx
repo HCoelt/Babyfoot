@@ -72,6 +72,10 @@ export default function NewGameScreen() {
         team1Player2Id: team1Player2Id!,
         team2Player1Id: team2Player1Id!,
         team2Player2Id: team2Player2Id!,
+        team1Player1Position: 'attack',
+        team1Player2Position: 'defense',
+        team2Player1Position: 'attack',
+        team2Player2Position: 'defense',
         team1Score,
         team2Score,
       });
@@ -116,7 +120,7 @@ export default function NewGameScreen() {
       flex: 1,
       backgroundColor: colors?.background || '#0A0A0F',
       paddingTop: insets.top + 4, // Reduced top padding
-      paddingBottom: insets.bottom + 56, // Reduced bottom padding (enough for tab bar)
+      paddingBottom: insets.bottom + 90, // Increased bottom padding to avoid navbar overlap
       paddingHorizontal: 16,
       overflow: 'hidden' // Ensure it clips if needed
     }}>

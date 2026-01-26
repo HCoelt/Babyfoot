@@ -49,18 +49,29 @@ export async function createPlayer(input: CreatePlayerInput): Promise<Player> {
 export async function deletePlayer(id: number): Promise<void> {
   const db = await getDatabase();
 
-  // Check if player has games
-  const gameCount = await db.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) as count FROM games
+  // Find all games involving this player
+  const games = await db.getAllAsync<{ id: number }>(
+    `SELECT id FROM games
      WHERE team1_player1_id = ? OR team1_player2_id = ?
      OR team2_player1_id = ? OR team2_player2_id = ?`,
     [id, id, id, id]
   );
 
-  if (gameCount && gameCount.count > 0) {
-    throw new Error('Cannot delete player with recorded games');
+  if (games.length > 0) {
+    const gameIds = games.map(g => g.id);
+    const gameIdsString = gameIds.join(',');
+
+    // Delete rating history for these games
+    await db.runAsync(`DELETE FROM rating_history WHERE game_id IN (${gameIdsString})`);
+
+    // Delete the games themselves
+    await db.runAsync(`DELETE FROM games WHERE id IN (${gameIdsString})`);
   }
 
+  // Delete any remaining rating history for this player (orphaned?)
+  await db.runAsync('DELETE FROM rating_history WHERE player_id = ?', [id]);
+
+  // Finally delete the player
   await db.runAsync('DELETE FROM players WHERE id = ?', [id]);
 }
 

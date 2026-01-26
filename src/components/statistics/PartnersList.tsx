@@ -44,7 +44,7 @@ export function PartnersList({ title, data, type, emptyMessage }: PartnersListPr
   }
 
   return (
-    <GlassCard style={{ marginVertical: 8 }}>
+    <GlassCard transparent style={{ marginVertical: 8 }}>
       <Text variant="titleMedium" className="mb-4 font-semibold text-text">
         {title}
       </Text>

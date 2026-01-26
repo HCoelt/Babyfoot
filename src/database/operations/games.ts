@@ -1,7 +1,7 @@
-import { getDatabase } from '../db';
 import { GameRow } from '../../types/database';
-import { Game, GameWithPlayers, CreateGameInput, RatingChange } from '../../types/game';
+import { CreateGameInput, Game, GameWithPlayers, RatingChange } from '../../types/game';
 import { calculateEloChanges } from '../../utils/scoring';
+import { getDatabase } from '../db';
 import { getPlayerById, updatePlayerRating } from './players';
 
 function rowToGame(row: GameRow): Game {
@@ -11,6 +11,10 @@ function rowToGame(row: GameRow): Game {
     team1Player2Id: row.team1_player2_id,
     team2Player1Id: row.team2_player1_id,
     team2Player2Id: row.team2_player2_id,
+    team1Player1Position: row.team1_player1_position,
+    team1Player2Position: row.team1_player2_position,
+    team2Player1Position: row.team2_player1_position,
+    team2Player2Position: row.team2_player2_position,
     team1Score: row.team1_score,
     team2Score: row.team2_score,
     winnerTeam: row.winner_team as 1 | 2,
@@ -103,15 +107,19 @@ export async function createGame(input: CreateGameInput): Promise<{ game: Game; 
   const result = await db.runAsync(
     `INSERT INTO games
       (team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id,
+       team1_player1_position, team1_player2_position, team2_player1_position, team2_player2_position,
        team1_score, team2_score, winner_team, played_at, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.team1Player1Id, input.team1Player2Id,
       input.team2Player1Id, input.team2Player2Id,
+      input.team1Player1Position, input.team1Player2Position,
+      input.team2Player1Position, input.team2Player2Position,
       input.team1Score, input.team2Score,
       winnerTeam, now, now
     ]
   );
+
 
   const gameId = result.lastInsertRowId;
 

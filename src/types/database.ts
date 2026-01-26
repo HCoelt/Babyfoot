@@ -15,6 +15,10 @@ export interface GameRow {
   team1_player2_id: number;
   team2_player1_id: number;
   team2_player2_id: number;
+  team1_player1_position: 'attack' | 'defense';
+  team1_player2_position: 'attack' | 'defense';
+  team2_player1_position: 'attack' | 'defense';
+  team2_player2_position: 'attack' | 'defense';
   team1_score: number;
   team2_score: number;
   winner_team: 1 | 2;

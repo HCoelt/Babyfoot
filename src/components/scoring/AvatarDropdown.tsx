@@ -58,8 +58,8 @@ export function AvatarDropdown({
                             alignItems: 'center',
                             backgroundColor: 'rgba(255, 255, 255, 0.1)',
                             borderRadius: 24,
-                            paddingVertical: 6,
-                            paddingHorizontal: 8,
+                            paddingVertical: 8,
+                            paddingHorizontal: 12,
                             gap: 8,
                             opacity: disabled ? 0.5 : 1,
                         }}
@@ -67,15 +67,15 @@ export function AvatarDropdown({
                         {/* Avatar Circle */}
                         <View
                             style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: 16,
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
                                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                                 justifyContent: 'center',
                                 alignItems: 'center',
                             }}
                         >
-                            <Text style={{ color: textColor, fontWeight: 'bold', fontSize: 11 }}>
+                            <Text style={{ color: textColor, fontWeight: 'bold', fontSize: 13 }}>
                                 {selectedPlayer ? getInitials(selectedPlayer.name) : '+'}
                             </Text>
                         </View>
@@ -83,12 +83,12 @@ export function AvatarDropdown({
                         {/* Label and Icon */}
                         <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                <Text style={{ color: mutedColor, fontSize: 9, letterSpacing: 0.5 }}>
+                                <Text style={{ color: mutedColor, fontSize: 10, letterSpacing: 0.5 }}>
                                     {label}
                                 </Text>
                                 <MaterialCommunityIcons
                                     name={iconName}
-                                    size={12}
+                                    size={14}
                                     color={accentColor}
                                 />
                             </View>
@@ -96,7 +96,7 @@ export function AvatarDropdown({
                                 numberOfLines={1}
                                 style={{
                                     color: textColor,
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight: selectedPlayer ? '600' : 'normal'
                                 }}
                             >

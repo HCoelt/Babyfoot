@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const CREATE_PLAYERS_TABLE = `
 CREATE TABLE IF NOT EXISTS players (
@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS games (
   team1_player2_id INTEGER NOT NULL,
   team2_player1_id INTEGER NOT NULL,
   team2_player2_id INTEGER NOT NULL,
+  team1_player1_position TEXT NOT NULL CHECK(team1_player1_position IN ('attack', 'defense')),
+  team1_player2_position TEXT NOT NULL CHECK(team1_player2_position IN ('attack', 'defense')),
+  team2_player1_position TEXT NOT NULL CHECK(team2_player1_position IN ('attack', 'defense')),
+  team2_player2_position TEXT NOT NULL CHECK(team2_player2_position IN ('attack', 'defense')),
   team1_score INTEGER NOT NULL,
   team2_score INTEGER NOT NULL,
   winner_team INTEGER NOT NULL CHECK(winner_team IN (1, 2)),
@@ -81,6 +85,20 @@ async function migrateToV2(db: SQLite.SQLiteDatabase): Promise<void> {
   }
 }
 
+async function migrateToV3(db: SQLite.SQLiteDatabase): Promise<void> {
+  // Check if team1_player1_position column exists
+  const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(games)');
+  const hasPositionColumn = tableInfo.some(col => col.name === 'team1_player1_position');
+
+  if (!hasPositionColumn) {
+    // Add position columns with defaults corresponding to implicit positions
+    await db.execAsync("ALTER TABLE games ADD COLUMN team1_player1_position TEXT DEFAULT 'attack'");
+    await db.execAsync("ALTER TABLE games ADD COLUMN team1_player2_position TEXT DEFAULT 'defense'");
+    await db.execAsync("ALTER TABLE games ADD COLUMN team2_player1_position TEXT DEFAULT 'attack'");
+    await db.execAsync("ALTER TABLE games ADD COLUMN team2_player2_position TEXT DEFAULT 'defense'");
+  }
+}
+
 export async function initializeSchema(db: SQLite.SQLiteDatabase): Promise<void> {
   const currentVersion = await getSchemaVersion(db);
 
@@ -98,6 +116,9 @@ export async function initializeSchema(db: SQLite.SQLiteDatabase): Promise<void>
   // Run migrations
   if (currentVersion < 2) {
     await migrateToV2(db);
+  }
+  if (currentVersion < 3) {
+    await migrateToV3(db);
   }
 
   // Update schema version

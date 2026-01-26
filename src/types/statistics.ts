@@ -1,3 +1,9 @@
+export interface PositionStats {
+  gamesPlayed: number;
+  wins: number;
+  winRate: number;
+}
+
 export interface PlayerStats {
   playerId: number;
   playerName: string;
@@ -7,6 +13,8 @@ export interface PlayerStats {
   losses: number;
   winRate: number;
   avgRatingChange: number;
+  attack: PositionStats;
+  defense: PositionStats;
 }
 
 export interface PartnerStats {
@@ -31,6 +39,11 @@ export interface RecentPerformance {
   won: boolean;
   ratingChange: number;
   ratingAfter: number;
+}
+
+export interface RatingHistoryPoint {
+  date: Date;
+  rating: number;
 }
 
 export interface LeaderboardEntry {

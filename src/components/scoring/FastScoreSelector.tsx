@@ -61,14 +61,14 @@ export function FastScoreSelector({
     };
 
     return (
-        <View style={{ alignItems: 'center', marginVertical: 2 }}>
+        <View style={{ alignItems: 'center', marginVertical: 2, width: '100%' }}>
             {/* 10 button - larger and above with minimal gap */}
-            <View style={{ marginBottom: 2 }}>
+            <View style={{ marginBottom: 4 }}>
                 <ScoreButton value={10} isLarge />
             </View>
 
             {/* 0-9 buttons row */}
-            <View style={{ flexDirection: 'row', gap: gap, justifyContent: 'center' }}>
+            <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                     <ScoreButton key={num} value={num} />
                 ))}
