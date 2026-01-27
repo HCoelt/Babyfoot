@@ -25,6 +25,20 @@ export function AvatarDropdown({
     disabled = false,
 }: AvatarDropdownProps) {
     const [visible, setVisible] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleSelect = (playerId: number) => {
+        if (isProcessing) return;
+        setIsProcessing(true);
+        setVisible(false);
+
+        setTimeout(() => {
+            onSelect(playerId);
+            // Brief delay before allowing another interaction
+            requestAnimationFrame(() => setIsProcessing(false));
+        }, 100);
+    };
+
     const accentColor = teamColor === 'red' ? (colors.red?.primary || '#E53935') : (colors.blue?.primary || '#1E88E5');
 
     const selectedPlayer = players.find((p) => p.id === selectedPlayerId);
@@ -48,11 +62,11 @@ export function AvatarDropdown({
         <View style={{ flex: 1 }}>
             <Menu
                 visible={visible}
-                onDismiss={() => setVisible(false)}
+                onDismiss={() => !isProcessing && setVisible(false)}
                 anchor={
                     <Pressable
-                        onPress={() => !disabled && setVisible(true)}
-                        disabled={disabled}
+                        onPress={() => !disabled && !isProcessing && setVisible(true)}
+                        disabled={disabled || isProcessing}
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -61,7 +75,7 @@ export function AvatarDropdown({
                             paddingVertical: 8,
                             paddingHorizontal: 12,
                             gap: 8,
-                            opacity: disabled ? 0.5 : 1,
+                            opacity: (disabled || isProcessing) ? 0.5 : 1,
                         }}
                     >
                         {/* Avatar Circle */}
@@ -114,10 +128,7 @@ export function AvatarDropdown({
                         availablePlayers.map((player) => (
                             <Menu.Item
                                 key={player.id}
-                                onPress={() => {
-                                    onSelect(player.id);
-                                    setVisible(false);
-                                }}
+                                onPress={() => handleSelect(player.id)}
                                 title={player.name}
                                 titleStyle={{
                                     color: player.id === selectedPlayerId ? accentColor : textColor,

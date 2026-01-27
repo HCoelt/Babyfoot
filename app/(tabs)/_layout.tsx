@@ -1,7 +1,9 @@
 import { colors } from '@/src/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -25,17 +27,21 @@ export default function TabLayout() {
           height: 64,
           paddingBottom: 8,
           paddingTop: 8,
-          backgroundColor: '#1A1A1F',
+          backgroundColor: 'rgba(0, 0, 0, 0.4)', // Fallback and extra layer
           borderColor: colors.cardBorder,
           borderWidth: 1,
           borderRadius: 32,
-          elevation: 20,
           zIndex: 9999,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.4,
-          shadowRadius: 16,
+          overflow: 'hidden',
+          elevation: 0, // Ensure no elevation shadow
         },
+        tabBarBackground: () => (
+          <BlurView
+            tint="dark"
+            intensity={100}
+            style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}
+          />
+        ),
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',

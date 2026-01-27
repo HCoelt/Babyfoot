@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "babyfoot-temp",
-    "slug": "babyfoot-temp",
+    "name": "Babyfoot",
+    "slug": "babyfoot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "babyfoottemp",
+    "scheme": "babyfoot",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -23,7 +23,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.babyfoottemp"
+      "package": "com.mdc.babyfoot"
     },
     "web": {
       "bundler": "metro",

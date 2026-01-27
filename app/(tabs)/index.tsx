@@ -22,8 +22,8 @@ export default function NewGameScreen() {
   } | null>(null);
 
   const insets = useSafeAreaInsets();
-  const [team1Score, setTeam1Score] = React.useState(0);
-  const [team2Score, setTeam2Score] = React.useState(0);
+  const [team1Score, setTeam1Score] = React.useState<number | null>(null);
+  const [team2Score, setTeam2Score] = React.useState<number | null>(null);
 
   const {
     team1Player1Id,
@@ -45,22 +45,34 @@ export default function NewGameScreen() {
     setTeam1Player2(team2Player2Id);
     setTeam2Player1(temp1);
     setTeam2Player2(temp2);
-    setTeam1Score(0);
-    setTeam2Score(0);
+    setTeam1Score(null);
+    setTeam2Score(null);
   };
 
   const reset = () => {
     resetPlayers();
-    setTeam1Score(0);
-    setTeam2Score(0);
+    setTeam1Score(null);
+    setTeam2Score(null);
     setLastResult(null);
   };
 
   const isValid = () => {
+    // All players must be selected
     if (!team1Player1Id || !team1Player2Id || !team2Player1Id || !team2Player2Id) return false;
+
+    // Players must be unique
     const playerIds = [team1Player1Id, team1Player2Id, team2Player1Id, team2Player2Id];
     if (new Set(playerIds).size !== 4) return false;
+
+    // Both teams must have a score selected
+    if (team1Score === null || team2Score === null) return false;
+
+    // At least one team must be at 10
+    if (team1Score !== 10 && team2Score !== 10) return false;
+
+    // Scores cannot be equal
     if (team1Score === team2Score) return false;
+
     return true;
   };
 
@@ -76,10 +88,10 @@ export default function NewGameScreen() {
         team1Player2Position: 'defense',
         team2Player1Position: 'attack',
         team2Player2Position: 'defense',
-        team1Score,
-        team2Score,
+        team1Score: team1Score!,
+        team2Score: team2Score!,
       });
-      const winnerTeam = team1Score > team2Score ? 1 : 2;
+      const winnerTeam = team1Score! > team2Score! ? 1 : 2;
       const team1Change = result.ratingChanges[0]?.change || 0;
       const team2Change = result.ratingChanges[2]?.change || 0;
       setLastResult({ winnerTeam, team1Change, team2Change });
@@ -144,7 +156,7 @@ export default function NewGameScreen() {
           allSelectedIds={selectedIds}
           onPlayer1Change={setTeam1Player1}
           onPlayer2Change={setTeam1Player2}
-          onScoreChange={setTeam1Score}
+          onScoreChange={(s) => setTeam1Score(s)}
           disabled={createGame.isPending}
         />
 
@@ -179,7 +191,7 @@ export default function NewGameScreen() {
           allSelectedIds={selectedIds}
           onPlayer1Change={setTeam2Player1}
           onPlayer2Change={setTeam2Player2}
-          onScoreChange={setTeam2Score}
+          onScoreChange={(s) => setTeam2Score(s)}
           disabled={createGame.isPending}
         />
       </View>

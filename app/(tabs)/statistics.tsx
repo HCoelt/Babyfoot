@@ -23,7 +23,22 @@ export default function StatisticsScreen() {
   const { data: players = [] } = usePlayers();
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const handlePlayerSelect = (playerId: number) => {
+    if (isProcessing) return;
+
+    setIsProcessing(true);
+    setMenuVisible(false);
+
+    // Use a small timeout to allow the menu to close smoothly before the heavy re-render
+    setTimeout(() => {
+      setSelectedPlayerId(playerId);
+      // Ensure we re-enable after the render cycle
+      requestAnimationFrame(() => setIsProcessing(false));
+    }, 100);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -35,6 +50,7 @@ export default function StatisticsScreen() {
         // Cleanup when screen loses focus
         setSelectedPlayerId(null);
         setMenuVisible(false);
+        setIsProcessing(false);
       };
     }, [])
   );
@@ -67,6 +83,7 @@ export default function StatisticsScreen() {
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 80 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={{ marginBottom: 16, alignItems: 'center' }}>
           <Text style={{ fontWeight: 'bold', letterSpacing: 3, color: colors.textMuted, fontSize: 10, marginBottom: 8 }}>
@@ -83,14 +100,15 @@ export default function StatisticsScreen() {
           </Text>
           <Menu
             visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
+            onDismiss={() => !isProcessing && setMenuVisible(false)}
             contentStyle={{ borderRadius: borderRadius.md, backgroundColor: colors.surface }}
             anchor={
               <Button
                 mode="outlined"
-                onPress={() => setMenuVisible(true)}
+                onPress={() => !isProcessing && setMenuVisible(true)}
                 style={{ borderRadius: borderRadius.md, borderColor: colors.cardBorder }}
                 textColor={selectedPlayer ? colors.text : colors.textSecondary}
+                disabled={isProcessing}
               >
                 {selectedPlayer?.name || 'Choose a player'}
               </Button>
@@ -100,13 +118,7 @@ export default function StatisticsScreen() {
               {players.map((player) => (
                 <Menu.Item
                   key={player.id}
-                  onPress={() => {
-                    setMenuVisible(false);
-                    // Defer state update to ensure menu closes smoothly before heavy re-render
-                    setTimeout(() => {
-                      setSelectedPlayerId(player.id);
-                    }, 0);
-                  }}
+                  onPress={() => handlePlayerSelect(player.id)}
                   title={player.name}
                   titleStyle={
                     player.id === selectedPlayerId

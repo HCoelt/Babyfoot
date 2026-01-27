@@ -4,7 +4,7 @@ import { Dimensions, Pressable, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
 interface FastScoreSelectorProps {
-    selectedScore: number;
+    selectedScore: number | null;
     onScoreChange: (score: number) => void;
     teamColor: 'red' | 'blue';
     disabled?: boolean;

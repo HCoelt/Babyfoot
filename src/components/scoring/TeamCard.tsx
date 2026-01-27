@@ -9,7 +9,7 @@ import { FastScoreSelector } from './FastScoreSelector';
 interface TeamCardProps {
     teamType: 'red' | 'blue';
     teamLabel: 'HOME' | 'AWAY';
-    score: number;
+    score: number | null;
     player1Id: number | null;
     player2Id: number | null;
     players: Player[];
@@ -74,7 +74,7 @@ export function TeamCard({
             {/* Score Display - Reduced Size */}
             <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                 <Text style={{ color: colors?.text || '#FFF', fontSize: isSmallScreen ? 40 : 48, fontWeight: 'bold', lineHeight: isSmallScreen ? 48 : 56 }}>
-                    {score}
+                    {score !== null ? score : '-'}
                 </Text>
             </View>
 
