@@ -23,7 +23,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mdc.babyfoot"
+      "package": "com.anonymous.babyfoottemp"
     },
     "web": {
       "bundler": "metro",
