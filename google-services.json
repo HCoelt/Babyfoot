@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "242511959764",
+    "project_id": "babyfoot-35beb",
+    "storage_bucket": "babyfoot-35beb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:242511959764:android:b1fdc19672ba016e204d41",
+        "android_client_info": {
+          "package_name": "com.anonymous.babyfoottemp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPivbxoiyw56t1N_r8QxYvP12Vsk_jruw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
