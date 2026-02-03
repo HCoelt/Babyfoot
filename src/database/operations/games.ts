@@ -1,6 +1,6 @@
 import { GameRow } from '../../types/database';
 import { CreateGameInput, Game, GameWithPlayers, RatingChange } from '../../types/game';
-import { calculateEloChanges } from '../../utils/scoring';
+import { applyRatingChange, calculateEloChanges } from '../../utils/scoring';
 import { getDatabase } from '../db';
 import { getPlayerById, updatePlayerRating } from './players';
 
@@ -93,48 +93,76 @@ export async function createGame(input: CreateGameInput): Promise<{ game: Game; 
 
   const [team1Player1, team1Player2, team2Player1, team2Player2] = players as NonNullable<typeof players[0]>[];
 
+  // Calculate team average Elos (for audit)
+  const eloTeam1Before = (team1Player1.currentRating + team1Player2.currentRating) / 2;
+  const eloTeam2Before = (team2Player1.currentRating + team2Player2.currentRating) / 2;
+
   // Determine winner
   const winnerTeam = input.team1Score > input.team2Score ? 1 : 2;
 
-  // Calculate rating changes
-  const ratingChanges = calculateEloChanges(
+  // Calculate rating changes using new algorithm (with scores for multiplier)
+  const eloResult = calculateEloChanges(
     { player1Rating: team1Player1.currentRating, player2Rating: team1Player2.currentRating },
     { player1Rating: team2Player1.currentRating, player2Rating: team2Player2.currentRating },
-    winnerTeam
+    input.team1Score,
+    input.team2Score
   );
 
-  // Insert game
+  // Determine changes for each team
+  const team1Change = winnerTeam === 1 ? eloResult.winnerChange : eloResult.loserChange;
+  const team2Change = winnerTeam === 2 ? eloResult.winnerChange : eloResult.loserChange;
+
+  // Insert game with audit fields
   const result = await db.runAsync(
     `INSERT INTO games
       (team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id,
        team1_player1_position, team1_player2_position, team2_player1_position, team2_player2_position,
-       team1_score, team2_score, winner_team, played_at, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       team1_score, team2_score, winner_team,
+       elo_team1_before, elo_team2_before, points_delta, score_multiplier,
+       played_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.team1Player1Id, input.team1Player2Id,
       input.team2Player1Id, input.team2Player2Id,
       input.team1Player1Position, input.team1Player2Position,
       input.team2Player1Position, input.team2Player2Position,
       input.team1Score, input.team2Score,
-      winnerTeam, now, now
+      winnerTeam,
+      eloTeam1Before, eloTeam2Before,
+      eloResult.pointsEffectifs, eloResult.multiplier,
+      now, now
     ]
   );
 
-
   const gameId = result.lastInsertRowId;
 
-  // Update player ratings and record history
+  // Build rating changes for all players
   const playerRatingChanges: RatingChange[] = [
-    { playerId: input.team1Player1Id, ratingBefore: team1Player1.currentRating, ratingAfter: team1Player1.currentRating + ratingChanges.team1Change, change: ratingChanges.team1Change },
-    { playerId: input.team1Player2Id, ratingBefore: team1Player2.currentRating, ratingAfter: team1Player2.currentRating + ratingChanges.team1Change, change: ratingChanges.team1Change },
-    { playerId: input.team2Player1Id, ratingBefore: team2Player1.currentRating, ratingAfter: team2Player1.currentRating + ratingChanges.team2Change, change: ratingChanges.team2Change },
-    { playerId: input.team2Player2Id, ratingBefore: team2Player2.currentRating, ratingAfter: team2Player2.currentRating + ratingChanges.team2Change, change: ratingChanges.team2Change },
+    { playerId: input.team1Player1Id, ratingBefore: team1Player1.currentRating, ratingAfter: applyRatingChange(team1Player1.currentRating, team1Change), change: team1Change },
+    { playerId: input.team1Player2Id, ratingBefore: team1Player2.currentRating, ratingAfter: applyRatingChange(team1Player2.currentRating, team1Change), change: team1Change },
+    { playerId: input.team2Player1Id, ratingBefore: team2Player1.currentRating, ratingAfter: applyRatingChange(team2Player1.currentRating, team2Change), change: team2Change },
+    { playerId: input.team2Player2Id, ratingBefore: team2Player2.currentRating, ratingAfter: applyRatingChange(team2Player2.currentRating, team2Change), change: team2Change },
   ];
 
-  // Update ratings and record history
+  // Update ratings, points_won/points_lost, and record history
   for (const change of playerRatingChanges) {
+    // Update player rating (with floor protection applied in applyRatingChange)
     await updatePlayerRating(change.playerId, change.ratingAfter);
 
+    // Update points_won or points_lost
+    if (change.change > 0) {
+      await db.runAsync(
+        `UPDATE players SET points_won = points_won + ?, updated_at = ? WHERE id = ?`,
+        [change.change, now, change.playerId]
+      );
+    } else if (change.change < 0) {
+      await db.runAsync(
+        `UPDATE players SET points_lost = points_lost + ?, updated_at = ? WHERE id = ?`,
+        [Math.abs(change.change), now, change.playerId]
+      );
+    }
+
+    // Record rating history
     await db.runAsync(
       `INSERT INTO rating_history
         (player_id, game_id, rating_before, rating_after, rating_change, created_at)

@@ -5,6 +5,8 @@ export interface PlayerRow {
   name: string;
   gamestyle: 'attack' | 'defense';
   current_rating: number;
+  points_won: number;
+  points_lost: number;
   created_at: number;
   updated_at: number;
 }
@@ -22,6 +24,10 @@ export interface GameRow {
   team1_score: number;
   team2_score: number;
   winner_team: 1 | 2;
+  elo_team1_before: number | null;
+  elo_team2_before: number | null;
+  points_delta: number | null;
+  score_multiplier: number | null;
   played_at: number;
   created_at: number;
 }
@@ -34,4 +40,20 @@ export interface RatingHistoryRow {
   rating_after: number;
   rating_change: number;
   created_at: number;
+}
+
+export interface SeasonRow {
+  id: number;
+  name: string;
+  date_start: number;
+  date_end: number | null;
+  is_active: number;
+  created_at: number;
+}
+
+export interface PartnerVictoriesRow {
+  id: number;
+  player_id: number;
+  partner_id: number;
+  victories: number;
 }

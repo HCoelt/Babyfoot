@@ -1,4 +1,5 @@
 import { GlassCard } from '@/src/components/ui';
+import { RankBadge } from '@/src/components/ui/RankBadge';
 import { colors } from '@/src/theme';
 import { LeaderboardEntry } from '@/src/types/statistics';
 import { formatRating } from '@/src/utils/scoring';
@@ -68,7 +69,8 @@ export const LeaderboardRow = memo(function LeaderboardRow({ entry }: Leaderboar
             {entry.gamesPlayed} games | {entry.winRate.toFixed(0)}% win rate
           </Text>
         </View>
-        <View className="items-end">
+        <RankBadge elo={entry.currentRating} size="small" showLabel={false} />
+        <View className="items-end ml-3">
           <Text
             variant="titleLarge"
             className="font-bold"

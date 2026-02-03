@@ -5,6 +5,8 @@ export interface Player {
   name: string;
   gamestyle: GameStyle;
   currentRating: number;
+  pointsWon: number;
+  pointsLost: number;
   createdAt: Date;
   updatedAt: Date;
 }

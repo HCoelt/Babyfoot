@@ -1,4 +1,5 @@
 import { AddPlayerForm } from '@/src/components/settings/AddPlayerForm';
+import { HardResetButton } from '@/src/components/settings/HardResetButton';
 import { PlayerList } from '@/src/components/settings/PlayerList';
 import { colors } from '@/src/theme';
 import React from 'react';
@@ -20,6 +21,7 @@ function ListHeader() {
         </Text>
       </View>
       <AddPlayerForm />
+      <HardResetButton />
     </View>
   );
 }

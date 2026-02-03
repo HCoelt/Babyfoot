@@ -7,10 +7,15 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, LogBox, View } from 'react-native';
 import { PaperProvider, Text } from 'react-native-paper';
 import 'react-native-reanimated';
 import '../global.css';
+
+// Ignore specific warnings
+LogBox.ignoreLogs([
+  'SafeAreaView has been deprecated',
+]);
 
 export { ErrorBoundary } from 'expo-router';
 

@@ -1,15 +1,25 @@
-// Modified Elo rating system for 2v2 team games
+// New Elo rating system for 2v2 team games
+// Algorithm based on bounded points with score multiplier
 
-const K_FACTOR = 32; // Sensitivity of rating changes
+// Constants
+export const INITIAL_ELO = 1000;
+export const MIN_ELO = 0; // Floor protection
+export const MIN_POINTS = 10;
+export const MAX_POINTS = 100;
+export const BASE_POINTS = 50;
+export const ELO_DIVISOR = 20;
 
 interface TeamRatings {
   player1Rating: number;
   player2Rating: number;
 }
 
-interface EloResult {
-  team1Change: number;
-  team2Change: number;
+export interface EloResult {
+  winnerChange: number;
+  loserChange: number;
+  basePoints: number;
+  multiplier: number;
+  pointsEffectifs: number;
 }
 
 /**
@@ -20,49 +30,85 @@ export function getTeamRating(team: TeamRatings): number {
 }
 
 /**
- * Calculate expected score (probability of winning) for team1
- * Uses the standard Elo formula: E = 1 / (1 + 10^((R2 - R1) / 400))
+ * Calculate base points from the Elo difference
+ * Formula: P_raw = 50 + (ELO_loser - ELO_winner) / 20
+ * Clamped between 10 and 100
+ * 
+ * - Beating a stronger team gives more points
+ * - Beating a weaker team gives fewer points
  */
-export function calculateExpectedScore(team1Rating: number, team2Rating: number): number {
-  return 1 / (1 + Math.pow(10, (team2Rating - team1Rating) / 400));
+export function calculateBasePoints(winnerElo: number, loserElo: number): number {
+  const rawPoints = BASE_POINTS + (loserElo - winnerElo) / ELO_DIVISOR;
+  return Math.round(Math.max(MIN_POINTS, Math.min(MAX_POINTS, rawPoints)));
+}
+
+/**
+ * Get score multiplier based on score difference
+ * Rewards dominant victories, penalizes narrow wins
+ * 
+ * delta 10: 1.3 (perfect game)
+ * delta 8-9: 1.1 (strong win)
+ * delta 3-7: 1.0 (normal game)
+ * delta 1-2: 0.9 (narrow win)
+ */
+export function getScoreMultiplier(scoreDelta: number): number {
+  if (scoreDelta === 10) return 1.3;
+  if (scoreDelta >= 8) return 1.1;
+  if (scoreDelta <= 2) return 0.9;
+  return 1.0;
 }
 
 /**
  * Calculate rating changes for both teams after a game
  * @param team1 - Ratings of team 1 players
- * @param team2 - Ratings of team 2 players
- * @param winnerTeam - 1 if team1 won, 2 if team2 won
- * @returns Rating changes for each team (positive for winner, negative for loser)
+ * @param team2 - Ratings of team 2 players  
+ * @param team1Score - Score of team 1
+ * @param team2Score - Score of team 2
+ * @returns Rating changes with breakdown
  */
 export function calculateEloChanges(
   team1: TeamRatings,
   team2: TeamRatings,
-  winnerTeam: 1 | 2
+  team1Score: number,
+  team2Score: number
 ): EloResult {
   const team1Rating = getTeamRating(team1);
   const team2Rating = getTeamRating(team2);
 
-  const team1Expected = calculateExpectedScore(team1Rating, team2Rating);
+  // Determine winner and loser
+  const team1Wins = team1Score > team2Score;
+  const winnerRating = team1Wins ? team1Rating : team2Rating;
+  const loserRating = team1Wins ? team2Rating : team1Rating;
 
-  // Actual scores: 1 for win, 0 for loss
-  const team1Actual = winnerTeam === 1 ? 1 : 0;
+  // Calculate base points (bounded 10-100)
+  const basePoints = calculateBasePoints(winnerRating, loserRating);
 
-  // Calculate rating change
-  const team1Change = Math.round(K_FACTOR * (team1Actual - team1Expected));
-  const team2Change = -team1Change; // Zero-sum: one team's gain is the other's loss
+  // Calculate score multiplier (0.9-1.3)
+  const scoreDelta = Math.abs(team1Score - team2Score);
+  const multiplier = getScoreMultiplier(scoreDelta);
+
+  // Calculate effective points (rounded)
+  const pointsEffectifs = Math.round(basePoints * multiplier);
+
+  // Winner gains, loser loses
+  const winnerChange = pointsEffectifs;
+  const loserChange = -pointsEffectifs;
 
   return {
-    team1Change,
-    team2Change,
+    winnerChange,
+    loserChange,
+    basePoints,
+    multiplier,
+    pointsEffectifs,
   };
 }
 
 /**
- * Calculate new rating after applying a change
+ * Apply rating change with floor protection
+ * Ensures rating never goes below MIN_ELO (0)
  */
 export function applyRatingChange(currentRating: number, change: number): number {
-  // Ensure rating doesn't go below 100
-  return Math.max(100, currentRating + change);
+  return Math.max(MIN_ELO, currentRating + change);
 }
 
 /**

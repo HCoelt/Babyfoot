@@ -8,6 +8,8 @@ function rowToPlayer(row: PlayerRow): Player {
     name: row.name,
     gamestyle: row.gamestyle || 'attack', // Fallback for existing players without gamestyle
     currentRating: row.current_rating,
+    pointsWon: row.points_won ?? 0,
+    pointsLost: row.points_lost ?? 0,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -147,6 +149,8 @@ export async function getPlayersWithStats(): Promise<PlayerWithStats[]> {
     name: row.name,
     gamestyle: row.gamestyle || 'attack', // Fallback for existing players without gamestyle
     currentRating: row.current_rating,
+    pointsWon: row.points_won ?? 0,
+    pointsLost: row.points_lost ?? 0,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     gamesPlayed: row.games_played,
