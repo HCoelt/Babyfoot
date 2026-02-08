@@ -54,7 +54,7 @@ export function GlassCard({
       <BlurView
         intensity={getBlurIntensity()}
         tint="dark"
-        style={{ flex: 1, padding: noPadding ? 0 : 16 }}
+        style={{ padding: noPadding ? 0 : 16 }}
       >
         {children}
       </BlurView>

@@ -1,6 +1,5 @@
 import React from 'react';
-import { ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, ViewStyle } from 'react-native';
 
 interface GradientBackgroundProps {
   children: React.ReactNode;
@@ -9,9 +8,9 @@ interface GradientBackgroundProps {
 
 export function GradientBackground({ children, style }: GradientBackgroundProps) {
   return (
-    <SafeAreaView className="flex-1 relative bg-black" style={style}>
+    <View className="flex-1 relative bg-black" style={style}>
       {children}
-    </SafeAreaView>
+    </View>
   );
 }
 
